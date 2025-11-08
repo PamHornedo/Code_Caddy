@@ -8,7 +8,6 @@ function Navigation() {
       <div className="nav-brand">
         <h2>CodeCaddy</h2>
       </div>
-
       <div className="nav-links">
         <Link
           to="/"
