@@ -1,7 +1,6 @@
-import { createContext, useContext, useReducer, useEffect } from "react";
+import { createContext, useContext, useReducer, ReactNode } from "react";
 import { searchBooks as searchGoogleBooks } from "../services/googleBooksApi";
 
-// Basic Book interface - students will expand this
 const sampleBooks = [
   {
     id: "1",
@@ -27,36 +26,66 @@ const sampleBooks = [
   },
 ];
 
+type BookStatus = "want-to-read" | "currently-reading" | "have-read";
+
+interface Book {
+  id: string;
+  title: string;
+  authors: string[];
+  description: string;
+  publishedDate?: string;
+  pageCount?: number;
+  imageLinks?: {
+    thumbnail: string;
+  };
+  status?: BookStatus;
+}
 interface BookCollectionState {
-  books: Book[]
-  isLoading: boolean
-  error: string | null
-  searchResults: Book[]
-  currentlyReading: Book[]
-  wantToRead: Book[]
-  haveRead: Book[]
+  books: Book[];
+  isLoading: boolean;
+  error: string | null;
+  searchResults: Book[];
+  currentlyReading: Book[];
+  wantToRead: Book[];
+  haveRead: Book[];
 }
 
 interface BookCollectionActions {
-  addBook: (book: Book) => void
-  removeBook: (bookId: string) => void
-  updateBookStatus: (bookId: string, status: BookStatus) => void
-  searchBooks: (query: string) => Promise<void>
-  clearSearch: () => void
+  addBook: (book: Book) => void;
+  removeBook: (bookId: string) => void;
+  updateBookStatus: (bookId: string, status: BookStatus) => void;
+  searchBooks: (query: string) => Promise<void>;
+  clearSearch: () => void;
 }
 
 interface BookCollectionHelpers {
-  getBookById: (id: string) => Book | undefined
-  getBooksByStatus: (status: BookStatus) => Book[]
-  getTotalBooks: () => number
-  getReadingProgress: () => { completed: number; total: number }
+  getBookById: (id: string) => Book | undefined;
+  getBooksByStatus: (status: BookStatus) => Book[];
+  getTotalBooks: () => number;
+  getReadingProgress: () => { completed: number; total: number };
 }
 
-// Simplified context for starter version
-const BookCollectionContext = createContext();
+interface BookCollectionContextValue
+  extends BookCollectionActions,
+    BookCollectionHelpers {
+  books: Book[];
+  searchResults: Book[];
+}
 
-// Simple reducer - students will expand this
-function bookCollectionReducer(state, action) {
+const BookCollectionContext = createContext<
+  BookCollectionContextValue | undefined
+>(undefined);
+
+type BookCollectionAction =
+  | { type: "ADD_BOOK"; payload: Book }
+  | { type: "REMOVE_BOOK"; payload: string }
+  | { type: "UPDATE_BOOK_STATUS"; payload: { id: string; status: BookStatus } }
+  | { type: "SET_SEARCH_RESULTS"; payload: Book[] };
+
+function bookCollectionReducer(
+  state: BookCollectionState,
+  action: BookCollectionAction
+): BookCollectionState {
   switch (action.type) {
     case "ADD_BOOK":
       return {
@@ -87,38 +116,42 @@ function bookCollectionReducer(state, action) {
   }
 }
 
-// Initial state
-const initialState = {
+const initialState: BookCollectionState = {
   books: sampleBooks.map((book) => ({ ...book, status: "want-to-read" })),
   searchResults: [],
+  isLoading: false,
+  error: null,
+  currentlyReading: [],
+  wantToRead: [],
+  haveRead: [],
 };
 
-export function BookCollectionProvider({ children }) {
+export function BookCollectionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(bookCollectionReducer, initialState);
 
-  // Basic actions - students will expand these
-  const addBook = (book) => {
+  const addBook = (book: Book) => {
     dispatch({ type: "ADD_BOOK", payload: book });
   };
 
-  const removeBook = (bookId) => {
+  const removeBook = (bookId: string) => {
     dispatch({ type: "REMOVE_BOOK", payload: bookId });
   };
 
-  const updateBookStatus = (bookId, status) => {
+  const updateBookStatus = (bookId: string, status: BookStatus) => {
     dispatch({ type: "UPDATE_BOOK_STATUS", payload: { id: bookId, status } });
   };
 
-  // Simplified search - students will implement Google Books API
-  const searchBooks = async (query) => {
+  const searchBooks = async (query: string) => {
     try {
       console.log("Searching for:", query);
 
-      // Use real Google Books API
-      const result = await searchGoogleBooks(query);
+      interface GoogleBooksApiResult {
+        items: Book[];
+      }
 
-      // Add status field to search results
-      const booksWithStatus = result.items.map((book) => ({
+      const result: GoogleBooksApiResult = await searchGoogleBooks(query);
+
+      const booksWithStatus: Book[] = result.items.map((book: Book) => ({
         ...book,
         status: "want-to-read",
       }));
@@ -127,7 +160,7 @@ export function BookCollectionProvider({ children }) {
     } catch (error) {
       console.error("Search failed:", error);
       // Fallback to mock results if API fails
-      const mockResults = [
+      const mockResults: Book[] = [
         {
           id: `search-${Date.now()}`,
           title: `Search Result: ${query}`,
@@ -139,28 +172,36 @@ export function BookCollectionProvider({ children }) {
             thumbnail:
               "https://via.placeholder.com/128x192/ff6b6b/ffffff?text=Search",
           },
+          status: "want-to-read",
         },
       ];
       dispatch({ type: "SET_SEARCH_RESULTS", payload: mockResults });
     }
   };
 
-  const value = {
-    // State
+  const value: BookCollectionContextValue = {
     books: state.books,
     searchResults: state.searchResults,
 
-    // Actions
     addBook,
     removeBook,
     updateBookStatus,
     searchBooks,
+    clearSearch: () => dispatch({ type: "SET_SEARCH_RESULTS", payload: [] }),
 
-    // Helper functions - students will implement these
-    getBooksByStatus: (status) =>
+    getBooksByStatus: (status: BookStatus) =>
       state.books.filter((book) => book.status === status),
-    getBookById: (id) => state.books.find((book) => book.id === id),
+
+    getBookById: (id: string) => state.books.find((book) => book.id === id),
+
     getTotalBooks: () => state.books.length,
+
+    getReadingProgress: () => {
+      const completed = state.books.filter(
+        (book) => book.status === "have-read"
+      ).length;
+      return { completed, total: state.books.length };
+    },
   };
 
   return (
