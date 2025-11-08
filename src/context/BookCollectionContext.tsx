@@ -27,32 +27,30 @@ const sampleBooks = [
   },
 ];
 
-// TODO: Students need to add these missing interfaces:
-//
-// interface BookCollectionState {
-//   books: Book[]
-//   isLoading: boolean
-//   error: string | null
-//   searchResults: Book[]
-//   currentlyReading: Book[]
-//   wantToRead: Book[]
-//   haveRead: Book[]
-// }
-//
-// interface BookCollectionActions {
-//   addBook: (book: Book) => void
-//   removeBook: (bookId: string) => void
-//   updateBookStatus: (bookId: string, status: BookStatus) => void
-//   searchBooks: (query: string) => Promise<void>
-//   clearSearch: () => void
-// }
-//
-// interface BookCollectionHelpers {
-//   getBookById: (id: string) => Book | undefined
-//   getBooksByStatus: (status: BookStatus) => Book[]
-//   getTotalBooks: () => number
-//   getReadingProgress: () => { completed: number; total: number }
-// }
+interface BookCollectionState {
+  books: Book[]
+  isLoading: boolean
+  error: string | null
+  searchResults: Book[]
+  currentlyReading: Book[]
+  wantToRead: Book[]
+  haveRead: Book[]
+}
+
+interface BookCollectionActions {
+  addBook: (book: Book) => void
+  removeBook: (bookId: string) => void
+  updateBookStatus: (bookId: string, status: BookStatus) => void
+  searchBooks: (query: string) => Promise<void>
+  clearSearch: () => void
+}
+
+interface BookCollectionHelpers {
+  getBookById: (id: string) => Book | undefined
+  getBooksByStatus: (status: BookStatus) => Book[]
+  getTotalBooks: () => number
+  getReadingProgress: () => { completed: number; total: number }
+}
 
 // Simplified context for starter version
 const BookCollectionContext = createContext();
@@ -161,6 +159,7 @@ export function BookCollectionProvider({ children }) {
     // Helper functions - students will implement these
     getBooksByStatus: (status) =>
       state.books.filter((book) => book.status === status),
+    getBookById: (id) => state.books.find((book) => book.id === id),
     getTotalBooks: () => state.books.length,
   };
 

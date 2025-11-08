@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useBookCollection } from "../context/BookCollectionContext";
+import BookDetails from "../components/BookDetails";
 
 function BookDetailsPage() {
   const { id } = useParams();
