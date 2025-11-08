@@ -9,16 +9,16 @@ import "./App.css";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Code_Caddy">
       <div className="app">
         <Navigation />
 
         <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/collection" element={<CollectionPage />} />
-            <Route path="/book/:id" element={<BookDetailsPage />} />
+            <Route path="/Code_Caddy/search" element={<SearchPage />} />
+            <Route path="/Code_Caddy/collection" element={<CollectionPage />} />
+            <Route path="/Code_Caddy/book/:id" element={<BookDetailsPage />} />
           </Routes>
         </main>
       </div>
